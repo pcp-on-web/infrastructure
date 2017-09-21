@@ -1,0 +1,56 @@
+pcp-on-web:
+  build: ./app-git/
+  restart: always
+  expose:
+    - 80
+  environment:
+    - GITREPO=https://github.com/pcp-on-web/project-website.git
+    - BASEDIR=html
+  volumes:
+   - ./data/pcp-on-web/www:/var/www/
+
+kanboard-db:
+  image: mariadb
+  restart: always
+  volumes:
+    - ./data/kanboard-db/var-lib-mysql:/var/lib/mysql:rw
+    - ./data/kanboard-db/etc-mysql:/etc-mysql:rw
+  environment:
+    - MYSQL_USER=user
+    - MYSQL_PASSWORD=password
+    - MYSQL_DATABASE=kanboard
+    - MYSQL_ROOT_PASSWORD=root_password
+
+kanboard:
+  build: ./app-kanboard/
+  restart: always
+  expose:
+    - 80
+  environment:
+    - MYSQL_USER=user
+    - MYSQL_PASSWORD=password
+    - MYSQL_DATABASE=kanboard
+    - MYSQL_LINK=kanboard-db
+
+  volumes:
+    - ./data/kanboard/www:/var/www/
+    - ./data/kanboard/data:/data
+  links:
+    - kanboard-db
+
+proxy:
+  image: nginx
+  restart: always
+  ports:
+    - 80:80
+    - 443:443
+  restart: always
+  mem_limit: 500MB
+  volumes:
+    - ./data/nginx/ssl/:/etc/nginx/ssl/:rw
+    - ./data/nginx/conf.d/:/etc/nginx/conf.d/:rw
+    - ./data/nginx/log/:/var/log/nginx/:rw
+  links:
+    - pcp-on-web
+    - kanboard
+
