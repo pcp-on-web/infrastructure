@@ -1,0 +1,27 @@
+version: '3'
+
+tasks:
+  create:
+    cmds:
+      - docker compose down 
+      - docker compose up task-dump
+      - docker compose up task-phpmyadmin
+      - docker compose up service-db &
+      - docker compose up service-web &
+
+
+  start:
+    cmds:
+      - docker compose up service-db &
+      - docker compose up service-web &
+  stop:
+    cmds:
+      - docker compose stop service-db &
+      - docker compose stop service-web &
+
+  update:
+    cmds:
+      - docker compose down service-db
+      - docker compose up task-dump
+      - docker compose up service-db &
+

@@ -1,0 +1,80 @@
+version: '3'
+
+services:
+
+  service-web:
+    restart: always
+    build: ../../docker/php-mysql
+    ports:
+    - 6101:80
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+      - ./data/www:/var/www/
+
+    networks:
+      - workbench
+
+  service-db:
+    image: docker.io/mariadb
+    restart: always
+    ports:
+      - 6102:3306
+    volumes:
+      - ./data/db/mysql:/var/lib/mysql
+      - ./data/db/etc-mysql:/etc-mysql:rw
+      - ./data/repo:/docker-entrypoint-initdb.d
+    environment:
+      - MYSQL_ROOT_PASSWORD=PASShelmstedtrootWORD
+      - MYSQL_USER=helmstedt
+      - MYSQL_PASSWORD=PASShelmstedtdbWORD
+      - MYSQL_DATABASE=helmstedt
+
+    networks:
+      - workbench
+
+
+  task-phpmyadmin:
+    build: ../../docker/webdata
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+      - ./data/www:/data
+      - ./data/.ssh:/root/.ssh
+    environment:
+      - REPOSITORY=https://files.phpmyadmin.net/phpMyAdmin/5.2.1/phpMyAdmin-5.2.1-all-languages.zip
+      - REPOTYPE=zip
+      - BASEDIR=helmstedt
+      - REPOPATH=/phpMyAdmin-5.2.1-all-languages
+      - AFTERCOPY=echo '<?php declare(strict_types=1);$\cfg["blowfish_secret"]="phahQu9eu8ohQue7ohw2iey0xiehooCh"; $\cfg["Servers"][1]["auth_type"] = "cookie"; $\cfg["Servers"][1]["host"] = "service-db";$\cfg["Servers"][1]["compress"] = false;$\cfg["Servers"][1]["AllowNoPassword"] = false;$\cfg["UploadDir"] = "";$\cfg["SaveDir"] = "";$\cfg["DefaultLang"] = "de"; $\cfg["ServerDefault"] = 1;?>' | sed 's/\$\\/$/g' > /data/html/helmstedt/config.inc.php
+    links:
+      - service-db
+    networks:
+      - workbench
+
+
+  task-dump:
+    build: ../../docker/webdata
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+      - ./data/repo:/data/repo/
+      - ./data/.ssh:/root/.ssh
+      - ./data/db:/data/db/
+    environment:
+      - REPOSITORY=git@github.com:pcp-on-web/databases.git
+      - REPOTYPE=git
+      - BASEDIR=repo
+      - REPOPATH=/helmstedt
+      - KEYFILE=id_database
+      - AFTERCOPY=cd /data/repo/ && unzip helmstedt.sql.zip && rm helmstedt.sql.zip && rm -rf /data/db/*
+    networks:
+      - workbench
+
+
+networks:
+
+  workbench:
+
+
+
