@@ -1,0 +1,30 @@
+version: '3'
+
+tasks:
+  create:
+    cmds:
+      - docker compose down 
+      - docker compose up task-clean
+      - docker compose up service-jupyter &
+      - url="http://localhost:6121/"; while [ "$(curl -s -o /dev/null -w "%{http_code}" "$url")" == "000" ]; do sleep 1; done;
+      - docker compose exec service-jupyter pip install SPARQLWrapper
+      - docker compose exec service-jupyter pip install ipython-sql
+      - docker compose exec service-jupyter pip install mysql-connector
+      - docker compose exec service-jupyter pip install PyMySQL
+      - docker compose exec service-jupyter bash -c 'echo "c.NotebookApp.allow_password_change:False" >> /home/jovyan/.jupyter/jupyter_notebook_config.py'
+      - docker compose exec service-jupyter bash -c 'echo "c.NotebookApp.password_required:True" >> /home/jovyan/.jupyter/jupyter_notebook_config.py'
+      - docker compose down service-jupyter 
+      - docker compose up service-jupyter &
+      - url="http://localhost:6121/"; while [ "$(curl -s -o /dev/null -w "%{http_code}" "$url")" == "000" ]; do sleep 1; done;
+      - echo "<a href=\"http://localhost:6121$(docker compose logs service-jupyter | grep :8888/lab?token | tail -n 1 | grep -oP '(?<=8888).*')\">Start</a>" > data/www/html/index.php
+      - docker compose up task-git
+      - docker compose up service-token &
+
+  start:
+    cmds:
+      - docker compose up &
+  stop:
+    cmds:
+      - docker compose down
+
+ 

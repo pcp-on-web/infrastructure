@@ -1,0 +1,56 @@
+version: '3'
+
+services:
+
+  service-jupyter:
+    image: docker.io/jupyter/scipy-notebook:latest
+    restart: always
+    ports:
+      - "6121:8888"
+    volumes:
+      - ./data/git/repo/work:/home/jovyan/work
+      - ./data/jupyter/config:/home/jovyan/.jupyter/
+    networks:
+      - workbench
+
+  task-clean:
+    image: docker.io/ubuntu:22.04
+    command: ["bash", "-c", "chmod -R a+rwx /home/jovyan/work && rm -rf /home/jovyan/work/* && chmod -R a+rwx /home/jovyan/.jupyter && rm -rf /home/jovyan/.jupyter/*"]
+    volumes:
+      - ./data/repo:/home/jovyan/work
+      - ./data/jupyter/config:/home/jovyan/.jupyter/
+      
+            
+  task-git:
+    build: ../../docker/git
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+      - ./data/git/:/data/git/
+      - ./data/.ssh:/root/.ssh
+    environment:
+      - REPOSITORY=git@github.com:pcp-on-web/data-import.git
+      - KEYFILE=id_jupyter
+    networks:
+      - workbench
+      
+      
+  service-token:
+    restart: always
+    image: docker.io/php:8.3-apache
+    ports:
+    - 6120:80
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+      - ./data/www:/var/www/
+
+    networks:
+      - workbench
+
+
+networks:
+
+  workbench:
+
+
