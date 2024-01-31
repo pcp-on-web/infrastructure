@@ -1,0 +1,56 @@
+version: '3'
+
+services:
+
+  service-fuseki:
+    image: docker.io/stain/jena-fuseki
+    restart: unless-stopped 
+    ports:
+      - 6111:3030
+    environment:
+      - ADMIN_PASSWORD=eC4xeiwi
+      - JVM_ARGS=-Xmx2g -DentityExpansionLimit=0
+      - FUSEKI_DATASET_1=leipzig
+      - FUSEKI_DATASET_2=bamberg
+      
+    volumes:
+      - ./data/fuseki:/fuseki
+      - ./data/repo:/staging
+    networks:
+      - workbench
+            
+  task-cleandb:
+    image: docker.io/ubuntu:22.04
+    command: ["bash", "-c", "chmod -R a+rwx /root/fuseki && rm -r /root/fuseki/* "]
+    volumes:
+      - ./data/fuseki:/root/fuseki
+    networks:
+      - workbench
+
+
+  task-leipzigbamberg:
+    build: ../../docker/webdata
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+      - ./data/repo:/data/repo/
+      - ./data/fuseki:/data/fuseki/
+      - ./data/.ssh:/root/.ssh
+    environment:
+      - REPOSITORY=git@github.com:pcp-on-web/databases.git
+      - REPOTYPE=git
+      - BASEDIR=repo
+      - REPOPATH=/leipzig
+      - KEYFILE=id_database
+      - AFTERCOPY=cp /root/repo/bamberg/bamberg.nt.gz /data/repo
+    networks:
+      - workbench
+
+
+
+networks:
+
+  workbench:
+
+
+

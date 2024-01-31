@@ -1,0 +1,32 @@
+version: '3'
+
+tasks:
+  create:
+    cmds:
+      - docker compose down 
+      - docker rm -f $(docker compose ps -aq) || true
+#      - docker compose up task-leipzigbamberg
+      - docker compose up task-cleandb
+      - docker compose up service-fuseki &
+      - url="http://localhost:6111/"; while [ "$(curl -s -o /dev/null -w "%{http_code}" "$url")" == "000" ]; do sleep 2; done;
+      - docker compose down
+      - docker rm -f $(docker compose ps -aq) || true  
+      - docker compose run service-fuseki bash -c 'tail -f /dev/null' &
+      - sleep 10     
+      - docker compose exec service-fuseki ./load.sh leipzig catalogus-professorum-lipsiensium.nt.gz
+      - docker compose exec service-fuseki ./load.sh bamberg bamberg.nt.gz 
+      - docker compose down service-fuseki 
+      - docker rm -f $(docker compose ps -aq) || true    
+      - docker compose up service-fuseki &
+      - docker compose exec service-fuseki bash -c 'sed -i "s/$/ .navbar-brand\:\:after { content\:\ \"- PCP-on-Web Project\" }/" /jena-fuseki/webapp/static/*.css'
+      - docker compose logs       
+    
+
+  start:
+    cmds:
+      - docker compose start service-fuseki 
+  stop:
+    cmds:
+      - docker compose stop service-fuseki 
+
+ 
