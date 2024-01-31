@@ -1,0 +1,64 @@
+version: '3'
+
+services:
+
+  service-yasgui:
+    restart: always
+    image: docker.io/php:8.3-apache
+    ports:
+    - 6131:80
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+      - ./data/www/yasgui/html/:/var/www/html/yasgui
+
+    networks:
+      - workbench
+
+  service-ontoexplorer:
+    restart: always
+    image: docker.io/php:8.3-apache
+    ports:
+    - 6132:80
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+      - ./data/www/ontoexplorer/html/:/var/www/html/
+
+
+    networks:
+      - workbench
+
+  task-ontoexplorer:
+    build: ../../docker/ontoexplorer
+
+    volumes:
+      - ./data/www/ontoexplorer:/data
+
+    networks:
+      - workbench
+      
+
+  task-yasgui:
+    build: ../../docker/webdata
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+      - ./data/www/yasgui:/data
+    environment:
+      - REPOSITORY=https://github.com/pcp-on-web/workbench.git
+      - REPOTYPE=git
+      - BASEDIR=html
+      - REPOPATH=/queries
+    networks:
+      - workbench
+      
+      
+
+
+networks:
+
+  workbench:
+
+
+

@@ -1,0 +1,16 @@
+version: '3'
+
+tasks:
+  start:
+    cmds:
+      - docker compose down
+      - docker compose up &
+  stop:
+    cmds:
+      - docker compose stop
+
+  update:
+    cmds:
+      - docker compose down 
+      - docker compose up  &
+
