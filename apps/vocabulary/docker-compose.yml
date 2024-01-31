@@ -1,0 +1,46 @@
+version: '3'
+
+services:
+
+  service-vocabulary:
+    restart: always
+    image: docker.io/php:8.3-apache
+    ports:
+    - 6001:80
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+      - ./data/www:/var/www/
+
+    networks:
+      - workbench
+
+  task-vocabulary:
+    build: ../../docker/webdata
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+      - ./data/www:/data
+      - ./data/.ssh:/root/.ssh
+    environment:
+      - REPOSITORY=https://github.com/pcp-on-web/ontology.git
+      - REPOTYPE=git
+      - BASEDIR=/ontology/0.2/
+      - REPOPATH=/html
+    networks:
+      - workbench
+
+  task-widoco:
+    build: ../../docker/pcp-widoco
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+      - ./data/.ssh:/root/.ssh
+    networks:
+      - workbench
+
+networks:
+
+  workbench:
+
+

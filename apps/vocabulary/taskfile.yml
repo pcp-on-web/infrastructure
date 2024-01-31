@@ -1,0 +1,24 @@
+version: '3'
+
+tasks:
+  create:
+    cmds:
+      - docker compose down
+      - docker compose up task-widoco 
+      - docker compose up task-vocabulary
+      - docker compose up service-vocabulary &
+
+  start:
+    cmds:
+      - docker compose up service-vocabulary &
+
+  stop:
+    cmds:
+      - docker compose stop service-vocabulary &
+
+  update:
+    cmds:
+      - docker compose up task-widoco 
+      - docker compose up task-vocabulary
+      - docker compose up service-vocabulary &
+
